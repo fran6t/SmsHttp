@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SmsHttp</string>
+    <string name="title_activity_settings">Paramètres</string>
 </resources>

@@ -2,12 +2,16 @@ package com.myouaibe.passion.smshttp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.owlike.genson.Genson;
 
@@ -19,22 +23,59 @@ import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
 
+    /* Pour la gestion des preferences */
+    private TextView textView;
+    private EditText editText;
+    private Button applyTextButton;
+    private Button saveButton;
+    public static final String SHARED_PREFS = "sharedPrefs";
+    public static final String TEXT = "text";
+    private String text;
+
+
+
     /* On declare notre champs text et notre bouton */
     private EditText txtIdentifier;
     private EditText txtDescription;
     private EditText txtBrand;
     private EditText txtPrice;
-    private Button btnUpdate;
+    private Button   btnUpdate;
+    private Button   btnTestServer;
 
     private EditText txtIdSms;
     private EditText txtQuelnumero;
     private EditText txtQuelmessage;
+    private TextView txtQuelstatus;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        /* Pour la gestion des preferences */
+        textView = (TextView) findViewById(R.id.textview);
+        editText = (EditText) findViewById(R.id.edittext);
+        applyTextButton = (Button) findViewById(R.id.apply_text_button);
+        saveButton = (Button) findViewById(R.id.save_button);
+
+        applyTextButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick( View view){
+                textView.setText(editText.getText().toString());
+            }
+        });
+
+        saveButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick( View view){
+               saveData();
+            }
+        });
+
+        /* On charge les preferences */
+        loadData();
+        updateViews();
 
         /* On relie notre objet graphique à nos varaible */
         txtIdentifier = (EditText) findViewById(R.id.txtIdentifier);
@@ -47,8 +88,12 @@ public class MainActivity extends AppCompatActivity {
         txtQuelnumero = (EditText) findViewById(R.id.txtQuelnumero);
         txtQuelmessage = (EditText) findViewById(R.id.txtQuelmessage);
 
+        txtQuelstatus = (TextView) findViewById(R.id.txtQuelstatus);
+
         /*On ajoute un gestionnaire d'evenement sur notre bouton */
         btnUpdate.setOnClickListener( btnUpdateListener );
+
+        IsServeurOnLine();
 
     }
     @Override
@@ -141,6 +186,50 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+
+    /* Function test si serveur distant ok
+    La function appel le serveur qui est dans les preferences et met à jour le text de status
+     */
+    public void IsServeurOnLine(){
+        Log.i("SMS-HTTP","Appui sur bouton test");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpURLConnection urlConnection = null;
+                try {
+                    /* L'URL appelée renvoi un json de la forme {"Status":"OnLine"} */
+                    //URL url = new URL("http://192.168.0.1/SmsHttp/status.php");
+                    URL url = new URL(text +"/status.php");
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+
+                    InputStream in = new BufferedInputStream( urlConnection.getInputStream());
+                    Scanner scanner = new Scanner( in );
+                    final SERVEUR_status serveur_status = new Genson().deserialize( scanner.nextLine(), SERVEUR_status.class);
+                    Log.i("SMS-HTTP","Result SERVEUR_status == " + serveur_status.getQuelstatus());
+
+                    maj_txtQuelstatus(serveur_status.getQuelstatus());
+
+                    in.close();
+                } catch( Exception e) {
+                    Log.e("SMS-HTTP","Cannot fund http server", e);
+                    maj_txtQuelstatus("Serveur Introuvable");
+                } finally {
+                    if ( urlConnection != null) urlConnection.disconnect();
+                }
+            }
+        }).start();
+    }
+
+    public void maj_txtQuelstatus( final String affichequoi){
+        /* On met à jour le champs txtQuelstatus */
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                txtQuelstatus.setText("" + affichequoi);
+            }
+        });
+    }
     /* Fonction permettant d'indiquer au PHP si le SMS est bien parti */
     public void crSMS(final int IdSms, final Boolean status_Envoi){
         new Thread(new Runnable() {
@@ -168,5 +257,26 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    /* Les trois methodes pour la gestion des preferences */
+    public void saveData(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
 
+        editor.putString(TEXT,textView.getText().toString());
+
+        editor.apply();
+
+        Toast.makeText(this,"Data saved", Toast.LENGTH_SHORT).show();
+    }
+
+    public void loadData(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        text = sharedPreferences.getString(TEXT, "http://192.168.0.1/SmsHttp"); // C'est ici defValue qu'on peut mettre la valeur par defaut
+    }
+
+    public void updateViews(){
+        textView.setText(text);
+    }
 }
+
+
