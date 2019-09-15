@@ -34,7 +34,7 @@
         android:layout_gravity="center_horizontal" />
 
     <Button
-        android:id="@+id/btnTestServer"
+        android:id="@+id/btn_Test_Server"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Test Serveur" />
@@ -46,32 +46,6 @@
         android:layout_height="wrap_content"
         android:text="OffLine" />
 
-    <Button
-        android:id="@+id/btnUpdate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Button" />
-
-    <EditText
-        android:id="@+id/txtDescription"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text="Name" />
-
-    <EditText
-        android:id="@+id/txtBrand"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text="Name" />
-
-    <EditText
-        android:id="@+id/txtPrice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:inputType="numberDecimal"
-        android:text="Name" />
 
     <EditText
         android:id="@+id/txtQuelnumero"
@@ -101,5 +75,11 @@
         android:layout_height="wrap_content"
         android:inputType="number"
         android:text="Name" />
+
+        <Button
+            android:id="@+id/btn_Envoi_Sms"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Envoi SMS" />
 
 </LinearLayout>

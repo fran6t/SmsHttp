@@ -28,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private Button applyTextButton;
     private Button saveButton;
+    private Button btnTestServer;
+    private Button btnEnvoiSms;
     public static final String SHARED_PREFS = "sharedPrefs";
     public static final String TEXT = "text";
     private String text;
@@ -35,12 +37,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     /* On declare notre champs text et notre bouton */
-    private EditText txtIdentifier;
-    private EditText txtDescription;
-    private EditText txtBrand;
-    private EditText txtPrice;
-    private Button   btnUpdate;
-    private Button   btnTestServer;
 
     private EditText txtIdSms;
     private EditText txtQuelnumero;
@@ -58,6 +54,12 @@ public class MainActivity extends AppCompatActivity {
         editText = (EditText) findViewById(R.id.edittext);
         applyTextButton = (Button) findViewById(R.id.apply_text_button);
         saveButton = (Button) findViewById(R.id.save_button);
+        btnTestServer = (Button) findViewById(R.id.btn_Test_Server);
+        btnEnvoiSms = (Button) findViewById(R.id.btn_Envoi_Sms);
+
+
+        /*On ajoute les  gestionnaires d'evenements sur les boutons */
+        btnEnvoiSms.setOnClickListener( btnEnvoiSmsListener );
 
         applyTextButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -73,16 +75,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        btnTestServer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                IsServeurOnLine();
+            }
+        });
+
         /* On charge les preferences */
         loadData();
         updateViews();
 
-        /* On relie notre objet graphique à nos varaible */
-        txtIdentifier = (EditText) findViewById(R.id.txtIdentifier);
-        txtDescription = (EditText) findViewById(R.id.txtDescription);
-        txtBrand = (EditText) findViewById(R.id.txtBrand);
-        txtPrice = (EditText) findViewById(R.id.txtPrice);
-        btnUpdate = (Button) findViewById(R.id.btnUpdate);
+        /* On relie nos objets graphiques à nos variables */
 
         txtIdSms = (EditText) findViewById(R.id.txtidSms);
         txtQuelnumero = (EditText) findViewById(R.id.txtQuelnumero);
@@ -90,51 +94,12 @@ public class MainActivity extends AppCompatActivity {
 
         txtQuelstatus = (TextView) findViewById(R.id.txtQuelstatus);
 
-        /*On ajoute un gestionnaire d'evenement sur notre bouton */
-        btnUpdate.setOnClickListener( btnUpdateListener );
-
         IsServeurOnLine();
 
     }
-    @Override
-    protected void onResume(){
-        super.onResume();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                HttpURLConnection urlConnection = null;
-                try {
-                    URL url = new URL("http://192.168.0.1/SmsHttp/index.php");
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("GET");
 
-                    InputStream in = new BufferedInputStream( urlConnection.getInputStream());
-                    Scanner scanner = new Scanner( in );
-                    final Article article = new Genson().deserialize( scanner.nextLine(), Article.class);
-                    Log.i("SMS-HTTP","Result == " + article);
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            txtIdentifier.setText("" + article.getIdArticle());
-                            txtDescription.setText( article.getDescription());
-                            txtBrand.setText( article.getBrand());
-                            txtPrice.setText( "" + article.getPrice());
-                        }
-                    });
-
-                    in.close();
-                } catch( Exception e) {
-                    Log.e("SMS-HTTP","Cannot fund http server", e);
-                } finally {
-                    if ( urlConnection != null) urlConnection.disconnect();
-                }
-            }
-        }).start();
-    }
-
-    private View.OnClickListener btnUpdateListener = new View.OnClickListener(){
+    private View.OnClickListener btnEnvoiSmsListener = new View.OnClickListener(){
         @Override
         public void onClick(View v){
             new Thread(new Runnable() {
